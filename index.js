@@ -8,7 +8,8 @@ const https = require('https');
  * With custom integrations, we don't have a way to find out who installed us, so we can't message them :(
  */
 
-const triviaStack = []
+const triviaStack = [];
+let responded = true;
 
 function onInstallation(bot, installer) {
     if (installer) {
@@ -58,7 +59,6 @@ if (process.env.TOKEN || process.env.SLACK_TOKEN) {
     process.exit(1);
 }
 
-
 /**
  * A demonstration for how to handle websocket events. In this case, just log when we have and have not
  * been disconnected from the websocket. In the future, it would be super awesome to be able to specify
@@ -77,36 +77,48 @@ controller.on('rtm_close', function (bot) {
     // you may want to attempt to re-open
 });
 
-
 /**
  * Core bot logic goes here!
  */
 // BEGIN EDITING HERE!
 
 controller.on('bot_channel_join', function (bot, message) {
-    bot.reply(message, "I'm here!")
+    bot.reply(message, "Hey, I'm alive ＼( °□° )／")
 });
 
 controller.hears(['hello', 'hi', 'greetings', 'watsup', 'hey'],  ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
-    bot.reply(message, 'Hello!');
+    bot.reply(message, 'Hey •_•');
+});
+controller.hears(['what can you do'],  ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
+    bot.reply(message, 'Type trivia and you will see ( ͡° ͜ʖ ͡°)');
+});
+controller.hears(['who are you'],  ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
+    bot.reply(message, 'Just an awesome robot');
+});
+
+controller.hears(['why', 'lol', 'are you sure?', 'who are you', 'no', 'so'],  ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
+    bot.reply(message, 'what? ಠ_ಠ');
 });
 
 controller.hears('trivia',  ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
+    bot.reply(message, 'Let me think.');
     makeTrivia(bot, message);
 });
+
 controller.hears('help',  ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
-    let resp = `For trivia say trivia ¯\_(ツ)_/¯`
-    bot.reply(message, 'Hello!');
+    let resp = `For trivia say: trivia.`
+    bot.reply(message, resp);
 });
 
-controller.hears(['I give up', 'I dont know', 'answer', 'what is it', 'who is it', 'what was it?', 'who was it?'], 
+controller.hears(['I give up', 'what', 'I dont know', 'so', 'answer', 'whats the answer','what is it', 'who is it', 'what was it?', 'who was it?'], 
 ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
-    if (triviaStack.length == 0) {
+    if (responded) {
         bot.reply(message, 'what? ಠ_ಠ');
     } else {
+        responded = true;
         let resp = triviaStack[triviaStack.length - 1].answer;
         console.log("Responding with: ", resp);
-        bot.reply(message, 'The answer is: ', resp);
+        bot.reply(message, 'The answer is: ' + resp);
     }
 });
 
@@ -121,8 +133,9 @@ const makeTrivia = async function(bot, message){
             console.log('Corrupted json: ', json)
             responseMessage = 'Corrupted json data (╯°□°）╯';
         } else {
+            responded = false;
             triviaStack.push(json);
-            responseMessage = "Question:" + json.question;
+            responseMessage = "Question: " + json.question;
         }
     }
 
