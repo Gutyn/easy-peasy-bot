@@ -9,7 +9,18 @@ const https = require('https');
  */
 
 const triviaStack = [];
-let responded = true;
+let guessing = false;
+let whatArray = [
+    'what? ಠ_ಠ',
+    'wat?',
+    'wut?',
+    'huh?',
+];
+
+var getWhat = function(){
+    var randomNumber = Math.floor(Math.random() * whatArray.length);
+    return whatArray[randomNumber];
+}
 
 function onInstallation(bot, installer) {
     if (installer) {
@@ -90,37 +101,47 @@ controller.hears(['hello', 'hi', 'greetings', 'watsup', 'hey'],  ['direct_mentio
     bot.reply(message, 'Hey •_•');
 });
 controller.hears(['what can you do'],  ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
-    bot.reply(message, 'Type trivia and you will see ( ͡° ͜ʖ ͡°)');
+    bot.reply(message, 'Type Trivia and you will see ( ͡° ͜ʖ ͡°)');
 });
-controller.hears(['who are you'],  ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
-    bot.reply(message, 'Just an awesome robot');
+controller.hears(['stop'],  ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
+    bot.reply(message, 'no');
+});
+controller.hears(['please'],  ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
+    bot.reply(message, 'no ಠ_ಠ');
+});
+controller.hears(['what are you', 'who are you'],  ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
+    bot.reply(message, 'Just an awesome Trivia bot');
 });
 
-controller.hears(['why', 'lol', 'are you sure?', 'who are you', 'no', 'so'],  ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
-    bot.reply(message, 'what? ಠ_ಠ');
+controller.hears(['why', 'are you sure?'],  ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
+    bot.reply(message, getWhat());
 });
 
-controller.hears('trivia',  ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
+controller.hears(['trivia', 'new question', 'next question', 'next'],  ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
     bot.reply(message, 'Let me think.');
     makeTrivia(bot, message);
 });
 
 controller.hears('help',  ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
-    let resp = `For trivia say: trivia.`
+    let resp = `For Trivia say: trivia. ・_・`
     bot.reply(message, resp);
 });
 
 controller.hears(['I give up', 'what', 'I dont know', 'so', 'answer', 'whats the answer','what is it', 'who is it', 'what was it?', 'who was it?'], 
 ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
-    if (responded) {
-        bot.reply(message, 'what? ಠ_ಠ');
+    if (!guessing) {
+        bot.reply(message, getWhat());
     } else {
-        responded = true;
+        setGuessing(false)
         let resp = triviaStack[triviaStack.length - 1].answer;
-        console.log("Responding with: ", resp);
         bot.reply(message, 'The answer is: ' + resp);
     }
 });
+
+const setGuessing = function(guess){
+    console.log(`Setting guessing: ${guess}`);
+    guessing = guess;
+}
 
 const makeTrivia = async function(bot, message){
     let data = await getRandomQuestion();
@@ -133,7 +154,7 @@ const makeTrivia = async function(bot, message){
             console.log('Corrupted json: ', json)
             responseMessage = 'Corrupted json data (╯°□°）╯';
         } else {
-            responded = false;
+            setGuessing(true)
             triviaStack.push(json);
             responseMessage = "Question: " + json.question;
         }
@@ -166,20 +187,32 @@ const getRandomQuestion = async function() {
     });
 }
 
-
 /**
  * AN example of what could be:
  * Any un-handled direct mention gets a reaction and a pat response!
  */
-//controller.on('direct_message,mention,direct_mention', function (bot, message) {
-//    bot.api.reactions.add({
-//        timestamp: message.ts,
-//        channel: message.channel,
-//        name: 'robot_face',
-//    }, function (err) {
-//        if (err) {
-//            console.log(err)
-//        }
-//        bot.reply(message, 'I heard you loud and clear boss.');
-//    });
-//});
+controller.on('direct_message,mention,direct_mention', function (bot, message) {
+    let imoji = '';
+    if (guessing) {
+        let resp = triviaStack[triviaStack.length - 1].answer;
+        if (message.text == resp) {
+            setGuessing(false)
+            imoji = 'thumbsup';
+            bot.reply(message, 'Correct °□°');
+        } else {
+            imoji = 'thumbsdown';
+        }
+    } else {
+        bot.reply(message, getWhat());
+    }
+   bot.api.reactions.add({
+       timestamp: message.ts,
+       channel: message.channel,
+       name: imoji,
+   }, function (err) {
+       if (err) {
+           console.log(err)
+       }
+   });
+
+});
