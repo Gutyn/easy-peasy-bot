@@ -58,3 +58,13 @@ Once you’ve got your bot developed to your liking, it is ready to be deployed 
 # Using Botkit for Bot Apps
 
 You can find full instructions for building a bot app with this repository at https://medium.com/slack-developer-blog/easy-peasy-bots-getting-started-96b65e6049bf#.4ay2fjf32
+
+
+# Personal Notes:
+
+1) To start the tunnel https://localtunnel.github.io/www/
+`lt --port 8765 --subdomain curio`
+
+2) To start the slack bot app.
+Find the client id and secret in Slack account.
+`CLIENT_ID=2553132995.705770067652 CLIENT_SECRET=6d0cff6615500f598e517bf3c95c7390 PORT=8765 npm start`
